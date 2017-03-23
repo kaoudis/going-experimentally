@@ -1,6 +1,7 @@
 package main
 
 import (
+    "crypto/sha512"
     "fmt"
     "log"
     "net/http"
@@ -18,12 +19,15 @@ func main() {
 }
 
 func hasher(writer http.ResponseWriter, request *http.Request) {
+    sha512Hasherator := sha512.New()
+
     if (request.Method == "POST") {
         request.ParseForm()
         toHash := request.Form.Get("password")
 
         if (len(toHash) > 0) {
-            fmt.Fprintf(writer, "You sent me %s\n", toHash)
+            sha512Hasherator.Write([]byte(toHash))
+            fmt.Fprintf(writer, "You sent me %s\n", sha512Hasherator.Sum(nil))
         } else {
             writer.WriteHeader(http.StatusBadRequest)
             fmt.Fprintln(writer, "Bad Request: 'password' field is required")
