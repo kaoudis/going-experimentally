@@ -1,15 +1,14 @@
 package main
 
 import (
-        "fmt"
-	"log"
-	"net/http"
-        "time"
+    "fmt"
+    "log"
+    "net/http"
+    "time"
 )
 
 func main() {
     router := http.NewServeMux()
-
     router.HandleFunc("/", hasher)
 
     waitingRouter := waiter(router)
@@ -19,7 +18,21 @@ func main() {
 }
 
 func hasher(writer http.ResponseWriter, request *http.Request) {
-    fmt.Fprintln(writer, "!!!!!!!!!!!!!!!!!1!!!!1!! HASHES COMING SOON !!!!!!!!!!!!!!!!1!!!!1!!!!!")
+    if (request.Method == "POST") {
+        request.ParseForm()
+        toHash := request.Form.Get("password")
+
+        if (len(toHash) > 0) {
+            fmt.Fprintf(writer, "You sent me %s\n", toHash)
+        } else {
+            writer.WriteHeader(http.StatusBadRequest)
+            fmt.Fprintln(writer, "Bad Request: 'password' field is required")
+        }
+    } else {
+        log.Printf("Unacceptable request received: %s\n", request)
+        writer.WriteHeader(http.StatusNotAcceptable)
+        writer.Write([]byte(""))
+    }
 }
 
 func waiter(handler http.Handler) http.Handler {
@@ -29,5 +42,5 @@ func waiter(handler http.Handler) http.Handler {
             handler.ServeHTTP(writer, request)
         })
 
-}
+    }
 
