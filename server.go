@@ -41,7 +41,7 @@ func hasher(writer http.ResponseWriter, request *http.Request) {
 			fmt.Fprintf(writer, "%s", hash)
 		} else {
 			writer.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(writer, "Bad Request: 'password' field is required")
+                        writer.Write([]byte(""))
 		}
 	} else {
 		log.Printf("Unacceptable request: %s\n", badRequestFormatter(request))
@@ -56,5 +56,4 @@ func waiter(handler http.Handler) http.Handler {
 			time.Sleep(time.Duration(5) * time.Second)
 			handler.ServeHTTP(writer, request)
 		})
-
 }
