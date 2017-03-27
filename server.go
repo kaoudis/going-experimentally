@@ -19,6 +19,7 @@ func requestLoggingFormatter(request *http.Request) string {
 	return fmt.Sprintf("%s from %s; proto %s\n", request.Method, request.URL, request.Proto)
 }
 
+// hash anything passed as the value to the 'password' parameter
 func hasher(writer http.ResponseWriter, request *http.Request) {
 	sha512Hasherator := sha512.New()
 
@@ -41,7 +42,8 @@ func hasher(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func waiter(handler http.Handler) http.Handler {
+// 'middleware': wait 5 seconds with connection open before doing anything
+func waitingHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			time.Sleep(time.Duration(5) * time.Second)
@@ -49,8 +51,9 @@ func waiter(handler http.Handler) http.Handler {
 		})
 }
 
+// split Handler out into a function callable in main so we can test our work
 func App() http.Handler {
 	router := http.NewServeMux()
 	router.HandleFunc("/", hasher)
-	return waiter(router)
+	return waitingHandler(router)
 }
