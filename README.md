@@ -8,10 +8,10 @@ A smol Go server that just returns base64-encoded hashes of client 'password' re
 
 The result in window 2 should be `3WZK2iUU8F4TjzXGlXDpO1fkjfNMPp5Pv+Mu9kAoVoPAylYukEfpXcGV5Cp5ddGsgAbaShIRYTDTXzp+QidhVw==`
 
-Note: server will wait 5 seconds on each request with the connection open before answering.
+Notes: server will wait 5 seconds on each request with the connection open before answering. If you choose to test the non-happy paths, you will see some logging output from the server beginning with 'Method not allowed' or 'Bad request'.
 
 # build and run tests
-`go build && go test -v`
+`go build && go test`
 
 # see test coverage (opens a new browser window)
 `go test -coverprofile=coverage.out && go tool cover -html=coverage.out` 
