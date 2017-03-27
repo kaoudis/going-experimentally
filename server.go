@@ -10,42 +10,33 @@ import (
 )
 
 func main() {
-	router := http.NewServeMux()
-	router.HandleFunc("/", hasher)
-
-	waitingRouter := waiter(router)
-
-	err := http.ListenAndServe(":8080", waitingRouter)
+	err := http.ListenAndServe(":8080", App())
 	log.Fatal(err)
 }
 
-func badRequestFormatter(request *http.Request) string {
-	return fmt.Sprintf(
-		"%s from %s \n\t(proto %s, host %s)\n",
-		request.Method,
-		request.URL,
-		request.Proto,
-		request.Host)
+// note: could also log request body, but I'm not sure if that's actually helpful.
+func requestLoggingFormatter(request *http.Request) string {
+	return fmt.Sprintf("%s from %s; proto %s\n", request.Method, request.URL, request.Proto)
 }
 
 func hasher(writer http.ResponseWriter, request *http.Request) {
 	sha512Hasherator := sha512.New()
 
 	if request.Method == "POST" {
-		request.ParseForm()
-		toHash := request.Form.Get("password")
+		toHash := request.FormValue("password")
 
 		if len(toHash) > 0 {
 			sha512Hasherator.Write([]byte(toHash))
 			hash := base64.StdEncoding.EncodeToString(sha512Hasherator.Sum(nil))
 			fmt.Fprintf(writer, "%s", hash)
-		} else {
+		} else { //400
+			log.Printf("Bad request: %s", requestLoggingFormatter(request))
 			writer.WriteHeader(http.StatusBadRequest)
-                        writer.Write([]byte(""))
+			writer.Write([]byte(""))
 		}
-	} else {
-		log.Printf("Unacceptable request: %s\n", badRequestFormatter(request))
-		writer.WriteHeader(http.StatusNotAcceptable)
+	} else { //405
+		log.Printf("Method not allowed: %s", requestLoggingFormatter(request))
+		writer.WriteHeader(http.StatusMethodNotAllowed)
 		writer.Write([]byte(""))
 	}
 }
@@ -56,4 +47,10 @@ func waiter(handler http.Handler) http.Handler {
 			time.Sleep(time.Duration(5) * time.Second)
 			handler.ServeHTTP(writer, request)
 		})
+}
+
+func App() http.Handler {
+	router := http.NewServeMux()
+	router.HandleFunc("/", hasher)
+	return waiter(router)
 }
