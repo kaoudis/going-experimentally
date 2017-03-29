@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -94,7 +96,10 @@ func TestServer(t *testing.T) {
 		resp, err := client.Do(req)
 
 		if err != nil {
-			responses = append(responses, resp)
+			log.Fatal(err)
 		}
+
+		bodyData, err := ioutil.ReadAll(resp.Body)
+		responses = append(responses, string(bodyData))
 	}
 }
