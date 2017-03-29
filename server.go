@@ -11,7 +11,10 @@ import (
 
 func main() {
 	err := http.ListenAndServe(":8080", App())
-	log.Fatal(err)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // note: could also log request body, but I'm not sure if that's actually helpful.

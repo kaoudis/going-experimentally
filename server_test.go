@@ -1,9 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -73,7 +70,7 @@ func TestHasherBadParams(t *testing.T) {
 	}
 }
 
-////////////////////////// end to end tests & helpers ////////////////////////////
+////////////////////////// end to end tests  ////////////////////////////
 
 // Prove we can handle concurrent connections. We use ListenAndServe, which calls Serve,
 // which (docs: https://golang.org/src/net/http/server.go?s=57297:57357#L2614) creates
@@ -85,27 +82,19 @@ func TestServer(t *testing.T) {
 	testServer := httptest.NewServer(App())
 	defer testServer.Close()
 
-}
+	wordsList := generateWordsList()
+	clientRequestsChannel := generateRequests(wordsList)
 
-func formatAsPassword(pass string) []byte {
-	return []byte(fmt.Sprintf("password=%s", pass))
-}
+	client := &http.Client{}
 
-func generateRequests(passwords ...string) <-chan *http.Request {
-	outlet := make(chan *http.Request)
+	responses := make([]string, 0, 1)
 
-	go func() {
-		for _, pass := range passwords {
-			request, err := http.NewRequest("POST", "http://localhost:8080", bytes.NewBuffer(formatAsPassword(pass)))
-			if err == nil {
-				outlet <- request
-			} else {
-				log.Print("Oh no! Building a hash request for %s failed!\n", pass)
-				continue
-			}
+	// send requests to server
+	for req := range clientRequestsChannel {
+		resp, err := client.Do(req)
+
+		if err != nil {
+			responses = append(responses, resp)
 		}
-		close(outlet)
-	}()
-
-	return outlet
+	}
 }
